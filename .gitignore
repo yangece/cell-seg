@@ -1,0 +1,5 @@
+.idea
+.env
+THRIVEdata/
+docker/
+algorithm/models/unet_models/

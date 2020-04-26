@@ -1,0 +1,77 @@
+{
+    "name" : "algorithm-template",
+    "version" : "v1_0_0",
+    "queue" : "algorithm_template--v1_0_0",
+    "parameters" : {
+        "inputSeries" : {
+            "label" : "Input Series",
+            "description" : "The series upon which the algorithm acts.",
+            "type" : "series",
+            "default" : ""
+        },
+        "threshold" : {
+            "label" : "threshold",
+            "description" : "This is an example of a parameter.",
+            "type" : "number",
+            "default" : 0
+        },
+        "specialVersion" : {
+            "label" : "Special Version",
+            "description" : "Whether to run special version of algorithm.",
+            "type" : "boolean",
+            "default" : "false"
+        },
+        "seedPoint" : {
+            "label" : "seed",
+            "description" : "3D coordinates selected from the image.",
+            "type" : "voxelIndex",
+            "default" : [0,0,0]
+        },
+        "required": ["inputSeries", "threshold", "specialVersion", "seedPoint"]
+    },
+    "results" : {
+        "outputSeries" : {
+            "label" : "Output Series",
+            "description" : "The new series the algorithm produces.",
+            "type" : "series"
+        },
+        "calculatedValue" : {
+            "label" : "Calculated Value",
+            "description" : "A value calculated by the algorithm.",
+            "type" : "number"
+        }
+    },
+    "result_display" : {
+        "grid" : {
+            "shape" : [2,1],
+            "columns" : [0.3,0.7],
+            "rows" : [1.0]
+        },
+        "cells" : [
+            {
+                "row" : 0,
+                "column" : 0,
+                "cellType" : "image",
+                "source" : "context",
+                "parameter" : "inputSeries",
+                "cellDisplayMode" : "background"
+            },
+            {
+                "row": 1,
+                "column": 0,
+                "cellType": "image",
+                "source": "result",
+                "parameter": "outputSeries",
+                "cellDisplayMode": "background"
+            }
+        ]
+    },
+    "api" : {
+      "context" : "none"
+    },
+    "doc" : {
+    "short" : "A short bit of documentation",
+    "full" : "Full documentation"
+    },
+    "classification" : "template/radiology"
+}

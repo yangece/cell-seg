@@ -1,0 +1,164 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive 
+
+RUN  echo "52.22.146.88 index.docker.io" >> /etc/hosts \
+  && apt-get update \
+  && apt-get install -y -qq --no-install-recommends \
+       curl \
+       apt-utils \
+       lsb-release \
+       apt-transport-https \
+       software-properties-common \
+       ca-certificates \
+  \
+  && apt-get install -y -qq \
+     iputils-ping \
+     build-essential \
+     python-virtualenv \
+     python-dev \
+     vim \
+     git \
+     sudo \
+     xterm \
+     xauth \
+     xorg \
+     dbus-x11 \
+     xfonts-100dpi \
+     xfonts-75dpi \
+     xfonts-cyrillic
+
+
+RUN apt-get install -y docker.io \
+  && apt-get -y autoremove \
+  && apt-get -y clean \
+  && rm -rf /var/lib/apt/lists/* \
+  \
+  && mkdir /tmp/.X11-unix \
+  && chmod 1777 /tmp/.X11-unix \
+  && chown root:root /tmp/.X11-unix/
+
+RUN apt-get update \
+  && apt-get install -y \
+  apt-utils \
+  file \
+  wget \
+  cmake \
+  bash-completion \
+  python3-software-properties \
+  python3 \
+  python3-pip \
+  python3-dev \
+  python3-tk \
+  python3-venv \
+  python3-numpy \
+  sqlite3 \
+  libproj-dev \
+  libjsoncpp-dev \
+  libgeos-dev \
+  libproj-dev \
+  libxml2-dev \
+  libpq-dev \
+  libnetcdf-dev \
+  libpoppler-dev \
+  libcurl4-gnutls-dev \
+  libhdf4-alt-dev \
+  libhdf5-serial-dev \
+  libgeographic-dev \
+  libfftw3-dev \
+  libtiff5-dev \
+  libgmp3-dev \
+  libmpfr-dev \
+  libxerces-c-dev \
+  libmpfr-dev \
+  libmuparser-dev \
+  libboost-date-time-dev \
+  libboost-system-dev \
+  libboost-filesystem-dev \
+  libgsl-dev \
+  libgeos++-dev \
+  libpng-dev \
+  sudo \
+  xvfb \
+  && apt-get -y clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install image processing related packages
+#RUN pip3 --no-cache-dir install scipy 
+RUN pip3 --no-cache-dir install -U scikit-learn
+RUN pip3 --no-cache-dir install scikit-image
+RUN pip3 --no-cache-dir install opencv-python
+RUN pip3 install tifffile
+
+RUN pip3 install keras>=2.2.4
+RUN pip3 install tensorflow
+
+# Install latest su-exec
+RUN  set -ex; \
+     \
+     curl -o /usr/local/bin/su-exec.c https://raw.githubusercontent.com/ncopa/su-exec/master/su-exec.c; \
+     \
+     fetch_deps='gcc libc-dev'; \
+     apt-get update; \
+     apt-get install -y --no-install-recommends $fetch_deps; \
+     rm -rf /var/lib/apt/lists/*; \
+     gcc -Wall \
+         /usr/local/bin/su-exec.c -o/usr/local/bin/su-exec; \
+     chown root:root /usr/local/bin/su-exec; \
+     chmod 0755 /usr/local/bin/su-exec; \
+     rm /usr/local/bin/su-exec.c; \
+     \
+     apt-get purge -y --auto-remove $fetch_deps
+
+# Enable the dynamic setting of the user
+COPY provision_container.sh /usr/local/bin/
+RUN chmod 1777 /usr/local/bin/provision_container.sh
+
+ENTRYPOINT ["/usr/local/bin/provision_container.sh"]
+CMD ["/bin/bash"]
+
+### for rt106 base image
+
+# install dependencies
+#RUN buildDeps='python3-pip' \
+#    && set -x \
+#    && apt-get -y update && apt-get install -y $buildDeps --no-install-recommends 
+
+RUN pip3 install --upgrade pip && hash -r \
+    && pip3 install flask pika boto3 requests junit-xml pytest-cov \
+    && pip3 install --upgrade setuptools
+
+# install SDK
+ADD rt106GenericAdaptorSQS.py rt106GenericAdaptorAMQP.py rt106GenericAdaptorREST.py rt106SpecificAdaptorCode.py rt106SpecificAdaptorDefinitions.json entrypoint.sh testGenericAdaptorAPIs.py testGenericAdaptorAMQP.py /rt106/
+
+# configure folder structures
+RUN mkdir /rt106/input && mkdir /rt106/output && mkdir /rt106/test
+
+# set permissions
+RUN chmod a+x /rt106/entrypoint.sh
+
+# set the working directory
+WORKDIR /rt106
+
+# establish the user
+# create non-privileged user and group
+RUN groupadd -r rt106 && useradd -r -g rt106 rt106 && chown -R rt106:rt106 /rt106
+USER rt106:rt106
+
+# configure the default port for an analytic, can be overridden in entrypoint
+EXPOSE 7106
+
+# entry point
+CMD ["/rt106/entrypoint.sh"]
+
+### end rt106
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_URL
+LABEL org.label-schema.vendor="THRIVE Team" \
+      org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url=$VCS_URL \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.0-rc1"

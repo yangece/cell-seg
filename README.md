@@ -4,7 +4,7 @@
 Included in the toolbox are algorithms of cell segmentation with integration with rt106 framework.
 
  
-## Features of Rt. 106 (all available through THRIVE)
+## Features of Rt. 106 
 
 * Based on Docker for easy setup and configuration.
 * Entirely web-based for easy deployment in cloud or on premise.
